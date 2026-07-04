@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import SearchBar from "../components/SearchBar";
 import StudentTable from "../components/StudentTable";
-import { deleteStudent, getStudents } from "../services/studentService";
+import {
+  deleteStudent,
+  filterStudents,
+  getStudents,
+} from "../services/studentService";
 
 function Students() {
   const location = useLocation();
   const [students, setStudents] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(
     location.state?.successMessage || "",
@@ -26,9 +34,12 @@ function Students() {
 
         if (isMounted) {
           setStudents(data);
+          setFilteredStudents(data);
         }
       } catch (err) {
         if (isMounted) {
+          setStudents([]);
+          setFilteredStudents([]);
           setError("Unable to load students right now.");
         }
       } finally {
@@ -44,6 +55,21 @@ function Students() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    setIsSearching(true);
+
+    const timeoutId = window.setTimeout(() => {
+      setFilteredStudents(filterStudents(students, searchTerm));
+      setIsSearching(false);
+    }, 180);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isLoading, searchTerm, students]);
 
   useEffect(() => {
     setSuccessMessage(location.state?.successMessage || "");
@@ -62,9 +88,13 @@ function Students() {
       setIsDeleting(true);
       setError("");
       await deleteStudent(deleteTarget.id);
-      setStudents((currentStudents) =>
-        currentStudents.filter((student) => student.id !== deleteTarget.id),
+
+      const updatedStudents = students.filter(
+        (student) => student.id !== deleteTarget.id,
       );
+
+      setStudents(updatedStudents);
+      setFilteredStudents(filterStudents(updatedStudents, searchTerm));
       setSuccessMessage(`Deleted ${deleteTarget.name}.`);
     } catch (err) {
       setError(err?.message || "Unable to delete student.");
@@ -90,7 +120,7 @@ function Students() {
               Students
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              View the students currently stored in Supabase.
+              Search, review, and manage students from a polished list view.
             </p>
           </div>
 
@@ -100,6 +130,25 @@ function Students() {
           >
             Add Student
           </Link>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Student directory
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Filter the list by student name or email in real time.
+              </p>
+            </div>
+
+            <SearchBar
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by name or email"
+            />
+          </div>
         </div>
 
         {successMessage ? (
@@ -114,7 +163,7 @@ function Students() {
               Delete student?
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Are you sure you want to delete this student?
+              This action removes the student record from Supabase.
             </p>
             <div className="mt-4 flex gap-3">
               <button
@@ -137,16 +186,24 @@ function Students() {
         ) : null}
 
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
 
         <StudentTable
-          students={students}
-          isLoading={isLoading}
+          students={filteredStudents}
+          isLoading={isLoading || isSearching}
           onDelete={handleDelete}
           deleteLoadingId={isDeleting ? deleteTarget?.id : null}
+          emptyTitle={
+            searchTerm ? "No matching students found." : "No students found."
+          }
+          emptyDescription={
+            searchTerm
+              ? "Try a different name or email search term."
+              : "Add your first student to start building the list."
+          }
         />
       </div>
     </div>

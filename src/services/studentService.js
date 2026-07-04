@@ -13,6 +13,21 @@ export async function getStudents() {
   return data ?? [];
 }
 
+export function filterStudents(students = [], searchTerm = "") {
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    return students;
+  }
+
+  return students.filter((student) => {
+    const name = student?.name?.toLowerCase() ?? "";
+    const email = student?.email?.toLowerCase() ?? "";
+
+    return name.includes(normalizedSearch) || email.includes(normalizedSearch);
+  });
+}
+
 export async function getStudentById(studentId) {
   const { data, error } = await supabase
     .from("students")

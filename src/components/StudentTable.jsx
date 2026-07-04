@@ -6,6 +6,8 @@ function StudentTable({
   isLoading = false,
   onDelete,
   deleteLoadingId = null,
+  emptyTitle = "No students found",
+  emptyDescription = "There are currently no students to display in this list.",
 }) {
   const navigate = useNavigate();
   const headers = ["Name", "Email", "Age", "Course", "Actions"];
@@ -16,19 +18,15 @@ function StudentTable({
 
   if (!students.length) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">
-          No students found
-        </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          There are currently no students to display in this list.
-        </p>
+      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">{emptyTitle}</h2>
+        <p className="mt-2 text-sm text-slate-600">{emptyDescription}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
@@ -64,7 +62,7 @@ function StudentTable({
                     <button
                       type="button"
                       onClick={() => navigate(`/students/edit/${student.id}`)}
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-indigo-500 hover:text-indigo-600"
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-indigo-500 hover:text-indigo-600"
                     >
                       Edit
                     </button>
@@ -72,7 +70,7 @@ function StudentTable({
                       type="button"
                       disabled={deleteLoadingId === student.id}
                       onClick={() => onDelete(student)}
-                      className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:border-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:border-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {deleteLoadingId === student.id
                         ? "Deleting..."
